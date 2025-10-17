@@ -53,10 +53,19 @@ class TestingAgent(BaseAgent):
 
         state.test_suite = {test_file: content}
 
-        pytest_result = pytest_tool.execute("tests/generated")
-        coverage_result = coverage_tool.execute(coverage_target=85.0)
+        pytest_result = pytest_tool.execute("tests/generated", workdir=state.output_dir)
+        coverage_result = coverage_tool.execute(
+            workdir=state.output_dir,
+            coverage_target=85.0,
+            test_directory="tests/generated",
+        )
 
         events.append("tests_generated=1")
+
+        state.metadata["testing"] = {
+            "pytest": pytest_result,
+            "coverage": coverage_result,
+        }
 
         return (
             {"tests": "generated"},

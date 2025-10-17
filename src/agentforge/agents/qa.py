@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Dict, List, Tuple
+from typing import Dict
 
 from agentforge.agents.base import BaseAgent
 from agentforge.orchestration.pipeline import PipelineState
@@ -21,11 +21,17 @@ class QualityAssuranceAgent(BaseAgent):
         safety = self.get_tool("safety_checker")
         file_writer = self.get_tool("file_writer")
 
+        source_dir = state.output_dir / "src"
+        if not source_dir.exists():
+            source_dir = state.output_dir
+
+        requirements_file = state.output_dir / "requirements.txt"
+
         qa_results = {
-            "ruff": ruff.execute("src"),
-            "mypy": mypy.execute("src"),
-            "bandit": bandit.execute("src"),
-            "safety": safety.execute("requirements.txt"),
+            "ruff": ruff.execute(source_dir, workdir=state.output_dir),
+            "mypy": mypy.execute(source_dir, workdir=state.output_dir),
+            "bandit": bandit.execute(source_dir, workdir=state.output_dir),
+            "safety": safety.execute(requirements_file, workdir=state.output_dir),
         }
         state.qa_reports = {name: report for name, report in qa_results.items()}
 
@@ -33,6 +39,8 @@ class QualityAssuranceAgent(BaseAgent):
         file_writer.execute("reports/quality.json", report_payload + "\n", base_dir=state.output_dir)
 
         events.append("qa_checks=4")
+
+        state.metadata["qa"] = qa_results
 
         return (
             {"status": "passed"},
