@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}New Project · Task Management System{% endblock %}
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h1 class="h4 mb-3">Create a new project</h1>
+          <form method="post" novalidate>
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="mb-3">
+              <label class="form-label" for="id_name">Project name</label>
+              {{ form.name }}
+              {% if form.name.errors %}
+                <div class="invalid-feedback d-block">{{ form.name.errors|striptags }}</div>
+              {% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="id_description">Description</label>
+              {{ form.description }}
+              {% if form.description.errors %}
+                <div class="invalid-feedback d-block">{{ form.description.errors|striptags }}</div>
+              {% endif %}
+            </div>
+            <div class="d-flex justify-content-between">
+              <a class="btn btn-link" href="{% url 'projects:dashboard' %}">Cancel</a>
+              <button type="submit" class="btn btn-primary">Create project</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
