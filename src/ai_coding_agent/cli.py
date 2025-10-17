@@ -17,13 +17,16 @@ console = Console()
 app = typer.Typer(help="AI Coding Agent CLI using OpenAI Agents SDK")
 
 
-def _resolve_docs(paths: tuple[Path, ...]) -> list[Path]:
+def _resolve_docs(doc_path: Optional[Path]) -> list[Path]:
     docs: list[Path] = []
-    for path in paths:
-        if path.is_dir():
-            docs.extend(sorted(path.glob("**/*")))
-        elif path.exists():
-            docs.append(path)
+    if not doc_path:
+        return docs
+
+    path = doc_path.expanduser()
+    if path.is_dir():
+        docs.extend(sorted(p for p in path.rglob("*") if p.is_file()))
+    elif path.exists():
+        docs.append(path)
     return docs
 
 
@@ -36,10 +39,25 @@ def run(
         help="Path to an agent project plan JSON file",
     ),
     prompt: Optional[str] = typer.Option(None, help="Optional override prompt"),
-    input_docs: tuple[Path, ...] = typer.Option((), help="Additional documents to load"),
-    model: str = typer.Option("gpt-5.0", help="Model identifier to use for agents"),
+    input_docs: Optional[Path] = typer.Option(
+        None,
+        "--input-docs",
+        "-d",
+        help="Optional path to a reference document or directory of documents to load",
+        exists=True,
+        dir_okay=True,
+        file_okay=True,
+        readable=True,
+        resolve_path=True,
+    ),
+    model: str = typer.Option("gpt-5", help="Model identifier to use for agents"),
     max_turns: int = typer.Option(8, help="Maximum turns per agent"),
-    temperature: float = typer.Option(0.2, help="Sampling temperature"),
+    temperature: Optional[float] = typer.Option(
+        None,
+        help="Sampling temperature (omit to use the model default).",
+        min=0.0,
+        max=2.0,
+    ),
 ) -> None:
     """Execute the multi-agent coding workflow."""
 

@@ -30,9 +30,9 @@ class WorkspaceConfig:
 class AgentRuntimeSettings(BaseModel):
     """Runtime knobs that can be serialized and stored in SQLite later."""
 
-    model: str = Field(default="gpt-5.0")
+    model: str = Field(default="gpt-5")
     max_turns: int = Field(default=8, ge=1, le=32)
-    temperature: float = Field(default=0.2, ge=0.0, le=2.0)
+    temperature: float | None = Field(default=None, ge=0.0, le=2.0)
     enable_web_search: bool = Field(default=False)
 
     class Config:

@@ -83,13 +83,71 @@ class MultiAgentPipeline:
         return [requirements, coding, testing, documentation]
 
     def _instantiate_agent(self, spec: AgentSpec) -> Agent[AgentRunState]:
-        return Agent(
-            name=spec.name,
-            instructions=spec.instructions,
-            tools=FILESYSTEM_TOOLS,
-            model=self.settings.model,
-            model_settings=ModelSettings(temperature=self.settings.temperature),
-        )
+        agent_kwargs = {
+            "name": spec.name,
+            "instructions": spec.instructions,
+            "tools": FILESYSTEM_TOOLS,
+            "model": self.settings.model,
+        }
+        if self.settings.temperature is not None:
+            agent_kwargs["model_settings"] = ModelSettings(temperature=self.settings.temperature)
+
+        return Agent(**agent_kwargs)
+
+    @staticmethod
+    def _summarize_markdown(text: str, limit: int = 400) -> str:
+        segments = []
+        for line in text.splitlines():
+            stripped = line.strip()
+            if not stripped:
+                continue
+            segments.append(stripped)
+            snippet = " ".join(segments)
+            if len(snippet) >= limit:
+                break
+        summary = " ".join(segments)
+        if len(summary) > limit:
+            summary = summary[:limit].rstrip() + "..."
+        return summary or "_No content available._"
+
+    def _emit_requirements_summary(self, state: AgentRunState) -> None:
+        requirements_dir = self.workspace / "requirements"
+        if not requirements_dir.exists():
+            state.log("No requirements directory found; skipping requirements summary.")
+            return
+
+        md_files = sorted(requirements_dir.glob("*.md"))
+        if not md_files:
+            state.log("No markdown requirements files detected; skipping summary.")
+            return
+
+        artifacts_dir = self.workspace / "artifacts"
+        artifacts_dir.mkdir(parents=True, exist_ok=True)
+        summary_path = artifacts_dir / "requirements_summary.md"
+
+        lines = [
+            "# Requirements Summary",
+            "",
+            f"Generated from {len(md_files)} markdown file(s) in `requirements/`.",
+            "",
+        ]
+
+        for md_file in md_files:
+            try:
+                content = md_file.read_text(encoding="utf-8")
+            except OSError as exc:
+                state.log(f"Failed to read {md_file}: {exc}")
+                continue
+
+            relative = md_file.relative_to(self.workspace)
+            lines.append(f"## {relative}")
+            lines.append("")
+            lines.append(self._summarize_markdown(content))
+            lines.append("")
+
+        summary_path.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
+        state.add_artifact("requirements_summary_path", str(summary_path))
+        state.log(f"Requirements summary written to {summary_path}")
 
     async def _run_agent(
         self,
@@ -141,6 +199,7 @@ class MultiAgentPipeline:
             state,
             "Summarize the run, produce README content, and reference recorded events.",
         )
+        self._emit_requirements_summary(state)
         state.log("Pipeline complete")
         return state
 
