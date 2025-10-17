@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-coding-agent"
+version = "0.1.0"
+description = "CLI for orchestrating a multi-agent coding workflow using OpenAI Agents SDK"
+authors = [
+  {name = "AI Coding Agent", email = "agent@example.com"}
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "openai>=1.109.1",
+  "openai_agents>=0.3.3",
+  "typer>=0.12.5",
+  "rich>=13.9.4",
+  "pydantic>=2.10.0",
+]
+
+[project.scripts]
+ai-coding-agent = "ai_coding_agent.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
