@@ -1,0 +1,2 @@
+[console_scripts]
+ai-coding-agent = ai_coding_agent.cli:app

@@ -1,0 +1,28 @@
+Metadata-Version: 2.4
+Name: ai-coding-agent
+Version: 0.1.0
+Summary: CLI for orchestrating a multi-agent coding workflow using OpenAI Agents SDK
+Author-email: AI Coding Agent <agent@example.com>
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: openai>=1.109.1
+Requires-Dist: openai_agents>=0.3.3
+Requires-Dist: typer>=0.12.5
+Requires-Dist: rich>=13.9.4
+Requires-Dist: pydantic>=2.10.0
+
+# AI Coding Agent
+
+This repository contains a proof-of-concept multi-agent coding orchestrator that uses the OpenAI Agents SDK (``openai_agents``) and the GPT-5 family of models to execute project plans encoded as JSON. The CLI accepts an ``agent_project_plan.json`` input and coordinates Requirements, Coding, Testing, and Documentation agents with shared workspace tooling such as ``write_many`` for batched filesystem writes.
+
+> **Note**
+> The workflow expects an ``OPENAI_API_KEY`` environment variable and internet access for model/tool usage. Without credentials the agents will build context but skip remote calls.
+
+## Quick start
+
+```bash
+pip install -e .
+ai-coding-agent run ./workspace --input-plan docs/agent_project_plan.json --prompt "Build a coding agent using OpenAI SDK"
+```
+
+Refer to [docs/README.md](docs/README.md) for background documents.
