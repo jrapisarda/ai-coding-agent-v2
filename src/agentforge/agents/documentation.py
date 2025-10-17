@@ -46,6 +46,40 @@ class DocumentationAgent(BaseAgent):
                 body_parts.append(f"### {label.capitalize()}")
                 body_parts.extend(f"- {entry}" for entry in entries)
 
+        testing_meta = state.metadata.get("testing")
+        if isinstance(testing_meta, dict):
+            pytest_status = testing_meta.get("pytest", {}).get("status")
+            coverage_status = testing_meta.get("coverage", {}).get("status")
+            coverage_observed = testing_meta.get("coverage", {}).get("observed")
+            testing_lines: List[str] = ["## Test Results"]
+            if pytest_status:
+                testing_lines.append(f"- Pytest: {pytest_status}")
+            if coverage_status or coverage_observed:
+                coverage_line = "- Coverage"
+                details = []
+                if coverage_status:
+                    details.append(f"status={coverage_status}")
+                if coverage_observed:
+                    details.append(f"observed={coverage_observed}")
+                if details:
+                    coverage_line += " (" + ", ".join(details) + ")"
+                testing_lines.append(coverage_line)
+            if len(testing_lines) > 1:
+                body_parts.append("\n".join(testing_lines))
+
+        qa_meta = state.metadata.get("qa")
+        if isinstance(qa_meta, dict):
+            qa_lines: List[str] = ["## Quality Checks"]
+            for name, result in qa_meta.items():
+                status = result.get("status") or result.get("dry_run")
+                if status is None and "command" in result:
+                    status = "executed"
+                if status is None:
+                    continue
+                qa_lines.append(f"- {name}: {status}")
+            if len(qa_lines) > 1:
+                body_parts.append("\n".join(qa_lines))
+
         if not body_parts:
             items = requirements_meta.get("items", state.requirements)
             requirements_section = "\n".join(f"- {req}" for req in items)

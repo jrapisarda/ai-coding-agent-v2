@@ -58,7 +58,7 @@ class CodeGenerationAgent(BaseAgent):
                 file_writer.execute("src/generated/MANIFEST.md", generated_manifest, base_dir=state.output_dir)
                 files["src/generated/MANIFEST.md"] = generated_manifest
 
-        git_ops.execute("add generated artifacts", dry_run=True)
+        git_ops.execute("add generated artifacts", workdir=state.output_dir, dry_run=True)
 
         state.project_files = files
         events.append(f"files_generated={len(files)}")
@@ -182,5 +182,9 @@ class CodeGenerationAgent(BaseAgent):
         if files:
             file_writer.execute("src/generated/__init__.py", "__all__ = []\n", base_dir=state.output_dir)
             files["src/generated/__init__.py"] = "__all__ = []\n"
+
+        requirements_txt = "\n".join(sorted({"pytest", "coverage"})) + "\n"
+        file_writer.execute("requirements.txt", requirements_txt, base_dir=state.output_dir)
+        files["requirements.txt"] = requirements_txt
 
         return files

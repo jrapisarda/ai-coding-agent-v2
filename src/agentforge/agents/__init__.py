@@ -22,20 +22,20 @@ from .testing import TestingAgent
 
 def build_agents(config: PipelineConfig, docs_root: Path, output_dir: Path, schema_path: Path) -> dict[str, BaseAgent]:
     schema_tool = SchemaValidatorTool(schema_path=schema_path)
-    research_tool = ResearchTool(docs_root=docs_root)
+    research_tool = ResearchTool(docs_root=docs_root, offline=config.offline_mode)
     file_writer_codegen = FileWriterTool(output_dir=output_dir)
     file_writer_testing = FileWriterTool(output_dir=output_dir)
     file_writer_docs = FileWriterTool(output_dir=output_dir)
     file_writer_reports = FileWriterTool(output_dir=output_dir)
-    git_ops = GitOperationsTool()
-    pytest_tool = PytestRunnerTool()
-    coverage_tool = CoverageAnalyzerTool()
+    git_ops = GitOperationsTool(offline=config.offline_mode)
+    pytest_tool = PytestRunnerTool(offline=config.offline_mode)
+    coverage_tool = CoverageAnalyzerTool(offline=config.offline_mode)
     markdown_tool = MarkdownWriterTool()
     diagram_tool = DiagramGeneratorTool()
-    ruff_tool = RuffCheckerTool()
-    mypy_tool = MypyValidatorTool()
-    bandit_tool = BanditScannerTool()
-    safety_tool = SafetyCheckerTool()
+    ruff_tool = RuffCheckerTool(offline=config.offline_mode)
+    mypy_tool = MypyValidatorTool(offline=config.offline_mode)
+    bandit_tool = BanditScannerTool(offline=config.offline_mode)
+    safety_tool = SafetyCheckerTool(offline=config.offline_mode)
     code_synthesis_tool = OpenAICodeGenerationTool(
         model=config.agents["CodeGeneration"].model.name,
         reasoning_effort=config.agents["CodeGeneration"].model.reasoning_effort,

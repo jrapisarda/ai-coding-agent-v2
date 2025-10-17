@@ -24,10 +24,16 @@ class OpenAICodeGenerationTool:
         if not api_key:
             return
 
+        base_url = os.getenv("OPENAI_BASE_URL")
+
         try:
             from openai import OpenAI  # type: ignore
 
-            self._client = OpenAI(api_key=api_key)
+            client_kwargs: Dict[str, Any] = {"api_key": api_key}
+            if base_url:
+                client_kwargs["base_url"] = base_url
+
+            self._client = OpenAI(**client_kwargs)
         except Exception:
             self._client = None
 
