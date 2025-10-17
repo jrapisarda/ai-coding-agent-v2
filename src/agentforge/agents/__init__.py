@@ -6,6 +6,7 @@ from agentforge.config import PipelineConfig
 from agentforge.tools.documentation import DiagramGeneratorTool, MarkdownWriterTool
 from agentforge.tools.file_ops import FileWriterTool
 from agentforge.tools.git_ops import GitOperationsTool
+from agentforge.tools.openai_api import OpenAICodeGenerationTool
 from agentforge.tools.quality import BanditScannerTool, MypyValidatorTool, RuffCheckerTool, SafetyCheckerTool
 from agentforge.tools.research import ResearchTool
 from agentforge.tools.testing import CoverageAnalyzerTool, PytestRunnerTool
@@ -22,7 +23,10 @@ from .testing import TestingAgent
 def build_agents(config: PipelineConfig, docs_root: Path, output_dir: Path, schema_path: Path) -> dict[str, BaseAgent]:
     schema_tool = SchemaValidatorTool(schema_path=schema_path)
     research_tool = ResearchTool(docs_root=docs_root)
-    file_writer = FileWriterTool(output_dir=output_dir)
+    file_writer_codegen = FileWriterTool(output_dir=output_dir)
+    file_writer_testing = FileWriterTool(output_dir=output_dir)
+    file_writer_docs = FileWriterTool(output_dir=output_dir)
+    file_writer_reports = FileWriterTool(output_dir=output_dir)
     git_ops = GitOperationsTool()
     pytest_tool = PytestRunnerTool()
     coverage_tool = CoverageAnalyzerTool()
@@ -32,6 +36,11 @@ def build_agents(config: PipelineConfig, docs_root: Path, output_dir: Path, sche
     mypy_tool = MypyValidatorTool()
     bandit_tool = BanditScannerTool()
     safety_tool = SafetyCheckerTool()
+    code_synthesis_tool = OpenAICodeGenerationTool(
+        model=config.agents["CodeGeneration"].model.name,
+        reasoning_effort=config.agents["CodeGeneration"].model.reasoning_effort,
+        offline=config.offline_mode,
+    )
 
     return {
         "RequirementsAnalysis": RequirementsAnalysisAgent(
@@ -42,22 +51,22 @@ def build_agents(config: PipelineConfig, docs_root: Path, output_dir: Path, sche
         "CodeGeneration": CodeGenerationAgent(
             name="CodeGeneration",
             config=config.agents["CodeGeneration"],
-            tools=[file_writer, git_ops],
+            tools=[file_writer_codegen, git_ops, code_synthesis_tool],
         ),
         "Testing": TestingAgent(
             name="Testing",
             config=config.agents["Testing"],
-            tools=[pytest_tool, coverage_tool],
+            tools=[pytest_tool, coverage_tool, file_writer_testing],
         ),
         "Documentation": DocumentationAgent(
             name="Documentation",
             config=config.agents["Documentation"],
-            tools=[markdown_tool, diagram_tool],
+            tools=[markdown_tool, diagram_tool, file_writer_docs],
         ),
         "QualityAssurance": QualityAssuranceAgent(
             name="QualityAssurance",
             config=config.agents["QualityAssurance"],
-            tools=[ruff_tool, mypy_tool, bandit_tool, safety_tool],
+            tools=[ruff_tool, mypy_tool, bandit_tool, safety_tool, file_writer_reports],
         ),
     }
 

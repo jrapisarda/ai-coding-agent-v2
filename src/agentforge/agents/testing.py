@@ -18,6 +18,7 @@ class TestingAgent(BaseAgent):
     ) -> tuple[Dict[str, str], Dict[str, str], List[str]]:
         pytest_tool = self.get_tool("pytest_runner")
         coverage_tool = self.get_tool("coverage_analyzer")
+        file_writer = self.get_tool("file_writer")
 
         test_file = "tests/generated/test_requirements.py"
         modules = [
@@ -46,6 +47,9 @@ class TestingAgent(BaseAgent):
         ).format(
             modules_list=",\n                ".join(modules)
         ).strip() + "\n"
+
+        file_writer.execute("tests/generated/__init__.py", "__all__ = []\n", base_dir=state.output_dir)
+        file_writer.execute(test_file, content, base_dir=state.output_dir)
 
         state.test_suite = {test_file: content}
 

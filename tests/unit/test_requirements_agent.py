@@ -34,3 +34,5 @@ def test_requirements_agent_extracts_requirements(pipeline_config: PipelineConfi
 
     assert int(result.output["requirements_count"]) == 2
     assert state.requirements
+    assert state.metadata["project"]["name"]
+    assert "items" in state.metadata.get("requirements", {})

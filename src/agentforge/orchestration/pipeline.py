@@ -25,6 +25,7 @@ class PipelineState:
     documentation: Dict[str, str] = field(default_factory=dict)
     qa_reports: Dict[str, str] = field(default_factory=dict)
     history: List[str] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
     def record_history(self, message: str) -> None:
         self.history.append(message)
@@ -67,6 +68,8 @@ class PipelineRunner:
             return result
 
     def run(self, start_agent: str, state: PipelineState) -> PipelineResult:
+        state.output_dir.mkdir(parents=True, exist_ok=True)
+
         executed: List[str] = []
         records: List[AgentRunRecord] = []
         current = start_agent
@@ -96,6 +99,7 @@ class PipelineRunner:
                 "test_suite": state.test_suite,
                 "documentation": state.documentation,
                 "qa_reports": state.qa_reports,
+                "metadata": state.metadata,
             },
             agents_executed=executed,
             total_tokens=0,

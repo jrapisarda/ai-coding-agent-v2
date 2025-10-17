@@ -16,6 +16,7 @@ def test_pipeline_runs_sequentially(runner, project_root, pipeline_config, tmp_p
     assert result.status == "completed"
     assert state.requirements
     assert state.project_files
+    assert "metadata" in result.final_output
     assert result.agents_executed == [
         "RequirementsAnalysis",
         "CodeGeneration",

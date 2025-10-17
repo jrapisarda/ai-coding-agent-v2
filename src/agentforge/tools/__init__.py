@@ -9,6 +9,7 @@ from .git_ops import GitOperationsTool
 from .testing import PytestRunnerTool, CoverageAnalyzerTool
 from .documentation import MarkdownWriterTool, DiagramGeneratorTool
 from .quality import RuffCheckerTool, MypyValidatorTool, BanditScannerTool, SafetyCheckerTool
+from .openai_api import OpenAICodeGenerationTool
 
 __all__ = [
     "SchemaValidatorTool",
@@ -23,4 +24,5 @@ __all__ = [
     "MypyValidatorTool",
     "BanditScannerTool",
     "SafetyCheckerTool",
+    "OpenAICodeGenerationTool",
 ]

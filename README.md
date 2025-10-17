@@ -4,6 +4,7 @@ AgentForge implements the orchestration model defined in `docs/RFC.md`. It upgra
 
 ## Features
 - RequirementsAnalysis -> CodeGeneration -> Testing -> Documentation -> QualityAssurance agents with explicit handoffs.
+- CodeGeneration agent can call GPT-5 through the OpenAI Responses API when online, while retaining deterministic offline fallbacks.
 - Offline-friendly tooling, SQLite persistence, and lightweight tracing for observability.
 - Configurable GPT-5 family model parameters per agent.
 - Deterministic unit, integration, and async end-to-end tests covering the full pipeline.
@@ -15,10 +16,17 @@ pip install -r requirements-dev.txt  # optional: tooling and test stack
 agentforge --spec tests/fixtures/min_spec.json --output _output
 ```
 
+Run the full pipeline against the richer project plan specification:
+
+```bash
+agentforge --spec tests/fixtures/agent_project_plan.json --output _output/plan_run
+```
+
 ### Configuration
 Runtime configuration lives in `src/agentforge/config.py` and can be overridden via environment variables:
 
 - `REQUIREMENTS_AGENT_MODEL` (and similarly for other agents) to adjust model names.
+- `OPENAI_API_KEY` enables live code synthesis; unset or offline mode forces deterministic fallbacks.
 - `AGENTFORGE_OFFLINE=1` to force offline execution.
 - `AGENTFORGE_DB` to point to a different SQLite persistence file.
 
@@ -42,6 +50,6 @@ Generated artifacts are emitted into the chosen `--output` directory. All tests 
 - Agent execution metadata persisted in `.agentforge.sqlite`.
 
 ## Dependency Validation
-- Runtime dependencies: `openai-agents>=1.0.0`, `jsonschema>=4.18.0`.
+- Runtime dependencies: `openai-agents>=1.0.0`, `jsonschema>=4.18.0`, `openai>=1.16.0`.
 - Optional developer tools: `pytest`, `coverage`, `ruff`, `mypy`, `bandit`, `safety`.
 - See `constraints.txt` for pinned versions when reproducibility is required.
