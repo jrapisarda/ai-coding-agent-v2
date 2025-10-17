@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Projects · Task Management System{% endblock %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1">Projects</h1>
+      <p class="text-muted mb-0">Track active workstreams, progress, and overdue tasks at a glance.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'projects:create-project' %}">Create Project</a>
+  </div>
+
+  {% if project_metrics %}
+    <div class="row g-4">
+      {% for item in project_metrics %}
+        <div class="col-md-6 col-xl-4">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <h2 class="h5 mb-1">{{ item.project.name }}</h2>
+                  <p class="text-muted small mb-0">{{ item.project.description|default:"No description provided." }}</p>
+                </div>
+                {% if item.overdue_tasks > 0 %}
+                  <span class="badge text-bg-danger">{{ item.overdue_tasks }} overdue</span>
+                {% endif %}
+              </div>
+
+              <div class="mb-3">
+                <div class="progress" role="progressbar" aria-valuenow="{{ item.completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                  <div class="progress-bar" style="width: {{ item.completion_percentage }}%;">
+                    {{ item.completion_percentage }}%
+                  </div>
+                </div>
+                <p class="text-muted small mb-0 mt-1">{{ item.completed_tasks }} of {{ item.total_tasks }} tasks complete</p>
+              </div>
+
+              <dl class="row small mb-3">
+                <dt class="col-sm-5">Created</dt>
+                <dd class="col-sm-7">{{ item.project.created_at|date:"M j, Y" }}</dd>
+                <dt class="col-sm-5">Updated</dt>
+                <dd class="col-sm-7">{{ item.project.updated_at|date:"M j, Y" }}</dd>
+              </dl>
+
+              <div class="d-flex gap-2">
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'projects:project-detail' item.project.slug %}">Open board</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'projects:export-project' item.project.slug 'csv' %}">Export CSV</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'projects:export-project' item.project.slug 'json' %}">Export JSON</a>
+              </div>
+            </div>
+            <div class="card-footer bg-body-tertiary py-2 text-end">
+              <form method="post" action="{% url 'projects:archive-project' item.project.slug %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-link text-danger p-0 small">Archive project</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-5 border rounded-3 bg-body-tertiary">
+      <h2 class="h4">No projects yet</h2>
+      <p class="text-muted">Get started by creating your first project. Tasks can be added once a project exists.</p>
+      <a class="btn btn-primary" href="{% url 'projects:create-project' %}">Create your first project</a>
+    </div>
+  {% endif %}
+
+  <div class="mt-5 text-end">
+    <a class="link-secondary" href="{% url 'projects:archived-projects' %}">
+      View archived projects ({{ archived_count }})
+    </a>
+  </div>
+{% endblock %}
