@@ -1,0 +1,17 @@
+{
+  "project": {
+    "name": "AgentForge Sample",
+    "summary": "Demonstration specification for pipeline tests.",
+    "version": "1.0.0"
+  },
+  "requirements": [
+    {
+      "id": "R1",
+      "description": "Generate code artifacts for each requirement."
+    },
+    {
+      "id": "R2",
+      "description": "Create documentation summarising generated outputs."
+    }
+  ]
+}
