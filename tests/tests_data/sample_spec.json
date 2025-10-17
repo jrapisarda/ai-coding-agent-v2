@@ -1,0 +1,14 @@
+{
+  "requirements": [
+    "The system shall process JSON input to generate markdown files.",
+    "The system shall record execution metadata in SQLite."
+  ],
+  "assumptions": [
+    "Input specifications are valid JSON.",
+    "Offline mode should produce deterministic results."
+  ],
+  "architecture": {
+    "components": ["cli", "runner", "agents"],
+    "notes": "High level view"
+  }
+}
