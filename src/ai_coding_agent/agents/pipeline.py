@@ -110,16 +110,16 @@ class MultiAgentPipeline:
             summary = summary[:limit].rstrip() + "..."
         return summary or "_No content available._"
 
-    def _emit_requirements_summary(self, state: AgentRunState) -> None:
+    def _emit_requirements_summary(self, state: AgentRunState) -> str | None:
         requirements_dir = self.workspace / "requirements"
         if not requirements_dir.exists():
             state.log("No requirements directory found; skipping requirements summary.")
-            return
+            return None
 
         md_files = sorted(requirements_dir.glob("*.md"))
         if not md_files:
             state.log("No markdown requirements files detected; skipping summary.")
-            return
+            return None
 
         artifacts_dir = self.workspace / "artifacts"
         artifacts_dir.mkdir(parents=True, exist_ok=True)
@@ -148,6 +148,11 @@ class MultiAgentPipeline:
         summary_path.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
         state.add_artifact("requirements_summary_path", str(summary_path))
         state.log(f"Requirements summary written to {summary_path}")
+        try:
+            return summary_path.read_text(encoding="utf-8")
+        except OSError as exc:
+            state.log(f"Failed to read generated summary {summary_path}: {exc}")
+            return None
 
     async def _run_agent(
         self,
@@ -168,14 +173,19 @@ class MultiAgentPipeline:
 
         state = AgentRunState(workspace=self.workspace, plan=self.plan)
         state.log("Pipeline start")
-        state.add_artifact("requirements_summary", self.plan.to_prompt_block())
+        plan_summary = self.plan.to_prompt_block()
+        state.add_artifact("requirements_summary", plan_summary)
 
         # Sequence through each agent, feeding forward summaries.
+        plan_prompt_block = self.plan.to_prompt_block()
         await self._run_agent(
             self.agents[0],
             state,
-            f"{prompt}\n\n{self.plan.to_prompt_block()}",
+            f"{prompt}\n\n{plan_prompt_block}",
         )
+        summary_text = self._emit_requirements_summary(state)
+        if summary_text:
+            state.add_artifact("requirements_summary", summary_text)
         state.add_artifact(
             "coding_summary",
             "Coding agent must transform requirements into code plans using write_many and record_event.",
@@ -199,7 +209,6 @@ class MultiAgentPipeline:
             state,
             "Summarize the run, produce README content, and reference recorded events.",
         )
-        self._emit_requirements_summary(state)
         state.log("Pipeline complete")
         return state
 
